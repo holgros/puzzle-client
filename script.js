@@ -3,6 +3,7 @@ let rectangleWidth;
 let rectangleHeight;
 
 let initPuzzle = (data) => {
+    //console.log(data);
     puzzleData = data;
     let titleElements = document.getElementsByClassName("title");
     for (let element of titleElements) {
@@ -12,6 +13,7 @@ let initPuzzle = (data) => {
 }
 
 window.onload = () => {
+    //console.log("Fetching...");
     fetch("https://peaceful-sands-97012.herokuapp.com/puzzle/1")
     .then(response=>response.json())
     .then(data=>{ initPuzzle(data); });
@@ -31,12 +33,15 @@ window.onresize = () => {
         rectangleHeight = Math.round(innerHeight/2);
         stacked = true;
     }
-    let innerHtml = "<polygon class='inputTriangle' style='fill:white;stroke:gray;stroke-width:1' />";
-    for (let i = 0; i < 17; i++) {
-        innerHtml += "<polygon class='inputTriangle' style='fill:white;stroke:gray;stroke-width:1' />";
+    let innerHtml = "";
+    for (let i = 0; i < 18; i++) {
+        innerHtml += `<polygon class="inputTriangle" style="fill:white;stroke:gray;stroke-width:1" />
+                    <svg class="angles"></svg>
+                    <svg class="terms"></svg>`;
     }
     interactionArea.innerHTML = innerHtml;
     let inputTriangles = document.getElementsByClassName("inputTriangle");
+    let inputAngles = document.getElementsByClassName("angles");
     for (let i = 0; i < 18; i++) {
         let points = getPoints(i, stacked);
         let angles = ["", "", ""];
@@ -44,69 +49,62 @@ window.onresize = () => {
         let terms = ["", "", ""];
         if (8 < i) terms = puzzleData.data[i-9].terms;
         let inputTriangle = inputTriangles[i];
-        let triangle = new Triangle(points, angles, terms, inputTriangle);
+        let inputAngle = inputAngles[i];
+        let triangle = new Triangle(points, angles, terms, [inputTriangle, inputAngle]);
         triangle.draw();
     }
 }
 
 let getPoints = (index, stacked) => {
-    let pt1;
-    let pt2;
-    let pt3;
-    let xFactor = Math.round(Math.min(rectangleWidth, rectangleHeight)/8);
-    let yFactor = Math.round(Math.min(rectangleWidth, rectangleHeight)*Math.sqrt(3)/8);
+    let xFactor = Math.round(Math.min(rectangleWidth, rectangleHeight)/6);
+    let yFactor = Math.round(Math.min(rectangleWidth, rectangleHeight)*Math.sqrt(3)/6);
     let factors = [xFactor, yFactor];
     switch (index) {
-        case 1:
-            //pt1 = new Point(3*xFactor, 0);
-            //pt2 = new Point(4*xFactor, yFactor);
-            //pt3 = new Point(2*xFactor, yFactor);
-            //return [pt1, pt2, pt3];
+        case 0:
             return pointPatternUpwards(factors, 3, 0);
-        case 2:
-            //pt1 = new Point(2*xFactor, yFactor);
-            //pt2 = new Point(3*xFactor, 2*yFactor);
-            //pt3 = new Point(xFactor, 2*yFactor);
-            //return [pt1, pt2, pt3];
+        case 1:
             return pointPatternUpwards(factors, 2, 1);
-        case 3:
-            //pt1 = new Point(2*xFactor, yFactor);
-            //pt2 = new Point(4*xFactor, yFactor);
-            //pt3 = new Point(3*xFactor, 2*yFactor);
-            //return [pt1, pt2, pt3];
+        case 2:
             return pointPatternDownwards(factors, 2, 1);
-        case 4:
-            //pt1 = new Point(4*xFactor, yFactor);
-            //pt2 = new Point(5*xFactor, 2*yFactor);
-            //pt3 = new Point(3*xFactor, 2*yFactor);
-            //return [pt1, pt2, pt3];
+        case 3:
             return pointPatternUpwards(factors, 4, 1);
-        case 5:
-            //pt1 = new Point(xFactor, 2*yFactor);
-            //pt2 = new Point(2*xFactor, 3*yFactor);
-            //pt3 = new Point(0, 3*yFactor);        
-            //return [pt1, pt2, pt3];
+        case 4:
             return pointPatternUpwards(factors, 1, 2);
-        case 6:
-            //pt1 = new Point(xFactor, 2*yFactor);
-            //pt2 = new Point(3*xFactor, 2*yFactor);
-            //pt3 = new Point(2*xFactor, 3*yFactor);
-            //return [pt1, pt2, pt3];
+        case 5:
             return pointPatternDownwards(factors, 1, 2);
-        case 7:
+        case 6:
             return pointPatternUpwards(factors, 3, 2);
-        case 8:
+        case 7:
             return pointPatternDownwards(factors, 3, 2);
+        case 8:
+            return pointPatternUpwards(factors, 5, 2);
         case 9:
-            return pointPatternUpwards(factors, 5, 2);
-        case 10:
-            if (stacked) return pointPatternUpwards(factors, 1, 4);
+            if (stacked) return pointPatternUpwards(factors, 2, 3.1);
             else return pointPatternUpwards(factors, 8, 0);
-        case 11:
-            if (stacked) return pointPatternDownwards(factors, 1, 4);
+        case 10:
+            if (stacked) return pointPatternDownwards(factors, 2, 3.1);
             else return pointPatternDownwards(factors, 8, 0);
-        default:
-            return pointPatternUpwards(factors, 5, 2);
+        case 11:
+            if (stacked) return pointPatternUpwards(factors, 4, 3.1);
+            else return pointPatternUpwards(factors, 10, 0);
+        case 12:
+            if (stacked) return pointPatternUpwards(factors, 2, 4.1);
+            else return pointPatternUpwards(factors, 8, 1);
+        case 13:
+            if (stacked) return pointPatternDownwards(factors, 2, 4.1);
+            else return pointPatternDownwards(factors, 8, 1);
+        case 14:
+            if (stacked) return pointPatternUpwards(factors, 4, 4.1);
+            else return pointPatternUpwards(factors, 10, 1);
+        case 15:
+            if (stacked) return pointPatternUpwards(factors, 2, 5.1);
+            else return pointPatternUpwards(factors, 8, 2);
+        case 16:
+            if (stacked) return pointPatternDownwards(factors, 2, 5.1);
+            else return pointPatternDownwards(factors, 8, 2);
+        case 17:
+            if (stacked) return pointPatternUpwards(factors, 4, 5.1);
+            else return pointPatternUpwards(factors, 10, 2);
     }
 }
 
