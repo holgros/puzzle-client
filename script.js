@@ -21,8 +21,8 @@ window.onload = () => {
 
 window.onresize = () => {
     let interactionArea = document.getElementById("interactionArea");
-    let innerHeight = Math.round(window.innerHeight/1.1) - document.getElementById("header").clientHeight;
-    let innerWidth = Math.round(window.innerWidth/1.1);
+    let innerHeight = Math.round(window.innerHeight/1.11) - document.getElementById("header").clientHeight;
+    let innerWidth = Math.round(window.innerWidth/1.11);
     interactionArea.setAttribute("height", innerHeight+"px");
     interactionArea.setAttribute("width", innerWidth+"px");
     rectangleWidth = Math.round(innerWidth/2);
@@ -42,6 +42,7 @@ window.onresize = () => {
     interactionArea.innerHTML = innerHtml;
     let inputTriangles = document.getElementsByClassName("inputTriangle");
     let inputAngles = document.getElementsByClassName("angles");
+    let inputTerms = document.getElementsByClassName("terms");
     for (let i = 0; i < 18; i++) {
         let points = getPoints(i, stacked);
         let angles = ["", "", ""];
@@ -50,7 +51,9 @@ window.onresize = () => {
         if (8 < i) terms = puzzleData.data[i-9].terms;
         let inputTriangle = inputTriangles[i];
         let inputAngle = inputAngles[i];
-        let triangle = new Triangle(points, angles, terms, [inputTriangle, inputAngle]);
+        let inputTerm = inputTerms[i];
+        let svgElements = [inputTriangle, inputAngle, inputTerm];
+        let triangle = new Triangle(points, angles, terms, svgElements);
         triangle.draw();
     }
 }
