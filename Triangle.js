@@ -134,8 +134,23 @@ class Triangle {
         return output;
     }
     
-    rotate = () => {
-        // TODO!
+    rotate = () => {    // clockwise!
+        let points = this.points;
+        let pointsCopy = JSON.parse(JSON.stringify(points));
+        for (let i = 0; i < 3; i++) {
+            if (points[i].orientation == "n") {
+                points[i].x = pointsCopy[(i+1)%3].x;
+                points[(i+1)%3].x = pointsCopy[i].x;
+                points[(i+2)%3].y = pointsCopy[i].y;
+                break;
+            }
+            if (points[i].orientation == "s") {
+                points[i].x = pointsCopy[(i+1)%3].x;
+                points[(i+1)%3].x = pointsCopy[i].x;
+                points[(i+2)%3].y = pointsCopy[i].y;
+                break;
+            }
+        }
         this.#setOrientations();
     }
 

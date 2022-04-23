@@ -55,6 +55,8 @@ window.onresize = () => {
         let svgElements = [inputTriangle, inputAngle, inputTerm];
         let triangle = new Triangle(points, angles, terms, svgElements);
         triangle.draw();
+        inputTriangle.triangle = triangle;
+        inputTriangle.addEventListener("click", rotate);
     }
 }
 
@@ -127,4 +129,10 @@ let pointPatternDownwards = (factors, nbr1, nbr2) => {
     pt2 = new Point((nbr1+2)*xFactor, nbr2*yFactor);
     pt3 = new Point((nbr1+1)*xFactor, (nbr2+1)*yFactor);
     return [pt1, pt2, pt3];
+}
+
+let rotate = (evt) => {
+    let triangle = evt.target.triangle;
+    triangle.rotate();
+    triangle.draw();
 }
