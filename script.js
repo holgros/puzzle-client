@@ -1,6 +1,10 @@
 let puzzleData;
 let rectangleWidth;
 let rectangleHeight;
+let triangleObjects = [];
+let dragging;
+let mouseDown;
+let lastMousePosition;
 
 let initPuzzle = (data) => {
     //console.log(data);
@@ -10,6 +14,7 @@ let initPuzzle = (data) => {
         element.innerHTML = data.title;
     }
     window.dispatchEvent(new Event("resize"));
+    addListenersBody(document.body);
 }
 
 window.onload = () => {
@@ -33,6 +38,8 @@ window.onresize = () => {
         rectangleHeight = Math.round(innerHeight/2);
         stacked = true;
     }
+    if (triangleObjects.stacked != stacked) triangleObjects = [];   // om du skakar bordet/fönstret för mycket så måste du börja om pusslet från början! :-)
+    triangleObjects.stacked = stacked;
     let innerHtml = "";
     for (let i = 0; i < 18; i++) {
         innerHtml += `<polygon class="inputTriangle" style="fill:white;stroke:gray;stroke-width:1" />
@@ -56,13 +63,25 @@ window.onresize = () => {
         let triangle = new Triangle(points, angles, terms, svgElements);
         triangle.draw();
         inputTriangle.triangle = triangle;
-        inputTriangle.addEventListener("click", rotate);
+        addListenersTriangle(inputTriangle);
+        triangle.xFactor = Math.round(Math.min(rectangleWidth, rectangleHeight)/6);
+        triangle.yFactor = Math.round(Math.min(rectangleWidth, rectangleHeight)*Math.sqrt(3)/6);
+        triangleObjects[i] = triangle;
     }
 }
 
 let getPoints = (index, stacked) => {
     let xFactor = Math.round(Math.min(rectangleWidth, rectangleHeight)/6);
     let yFactor = Math.round(Math.min(rectangleWidth, rectangleHeight)*Math.sqrt(3)/6);
+    if (triangleObjects[index]) {   // om triangel redan har initialiserats
+        let triangle = triangleObjects[index];
+        let points = [];
+        for (let i = 0; i < 3; i++) {
+            let point = new Point(xFactor*triangle.points[i].x/triangle.xFactor, yFactor*triangle.points[i].y/triangle.yFactor);
+            points.push(point);
+        }
+        return points;
+    }
     let factors = [xFactor, yFactor];
     switch (index) {
         case 0:
@@ -131,8 +150,48 @@ let pointPatternDownwards = (factors, nbr1, nbr2) => {
     return [pt1, pt2, pt3];
 }
 
-let rotate = (evt) => {
+let addListenersBody = (body) => {
+    body.addEventListener("mousemove", moveTriangle);
+    body.addEventListener("mouseup", () => {
+        mouseDown = null;
+        dragging = null;
+    });
+}
+
+let addListenersTriangle = (svgTriangle) => {
+    svgTriangle.addEventListener("mousedown", drag);
+    svgTriangle.addEventListener("mouseup", rotate);
+}
+
+let drag = (evt) => {   // triggas när musknappen trycks över en triangel
+    evt.preventDefault();
+    mouseDown = evt.target;
+    lastMousePosition = new Point(evt.clientX, evt.clientY);
+}
+
+let rotate = (evt) => { // triggas när musknappen släpps över en triangel
+    if (dragging || !mouseDown) {
+        dragging = null;
+        return;
+    }
+    mouseDown = null;
     let triangle = evt.target.triangle;
     triangle.rotate();
     triangle.draw();
+}
+
+let moveTriangle = (evt) => {
+    evt.preventDefault();
+    if (mouseDown) {
+        dragging = mouseDown;
+        triangle = dragging.triangle;
+        let dx = evt.clientX-lastMousePosition.x;
+        let dy = evt.clientY-lastMousePosition.y;
+        lastMousePosition = new Point(evt.clientX, evt.clientY);
+        for (point of triangle.points) {
+            point.x += dx;
+            point.y += dy;
+        }
+        triangle.draw();
+    }
 }
