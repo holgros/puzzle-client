@@ -5,9 +5,9 @@ let triangleObjects = [];
 let dragging;
 let mouseDown;
 let lastMousePosition;
+let targetTriangle;
 
 let initPuzzle = (data) => {
-    //console.log(data);
     puzzleData = data;
     let titleElements = document.getElementsByClassName("title");
     for (let element of titleElements) {
@@ -18,7 +18,6 @@ let initPuzzle = (data) => {
 }
 
 window.onload = () => {
-    //console.log("Fetching...");
     fetch("https://peaceful-sands-97012.herokuapp.com/puzzle/1")
     .then(response=>response.json())
     .then(data=>{ initPuzzle(data); });
@@ -160,11 +159,15 @@ let addListenersBody = (body) => {
 
 let addListenersTriangle = (svgTriangle) => {
     svgTriangle.addEventListener("mousedown", drag);
-    svgTriangle.addEventListener("mouseup", rotate);
+    svgTriangle.addEventListener("mouseup", rotateOrDrop);
 }
 
 let drag = (evt) => {   // triggas när musknappen trycks över en triangel
     evt.preventDefault();
+    let triangles = document.getElementsByClassName("inputTriangle");
+    for (let i = 0; i < triangles.length; i++) {
+        if (triangles[i] == evt.target && i < 9) return;
+    }
     mouseDown = evt.target;
     /* TODO: position the latest clicked triangle on top of the others...
     let index;
@@ -183,8 +186,23 @@ let drag = (evt) => {   // triggas när musknappen trycks över en triangel
     lastMousePosition = new Point(evt.clientX, evt.clientY);
 }
 
-let rotate = (evt) => { // triggas när musknappen släpps över en triangel
+let rotateOrDrop = (evt) => { // triggas när musknappen släpps över en triangel
     if (dragging || !mouseDown) {
+        mouseDown = null;
+        if (dragging && targetTriangle) {
+            let index;
+            for (let i = 9; i < 18; i++) {
+                if (dragging == triangleObjects[i].svgElement) {
+                    index = i;
+                    break;
+                }
+            }
+            triangleObjects[index].points = JSON.parse(JSON.stringify(targetTriangle.points));  // deep copy!
+            triangleObjects[index].draw();
+            targetTriangle.svgElement.style.stroke = "grey";
+            targetTriangle.svgElement.style.strokeWidth = 1;
+        }
+        targetTriangle = null;
         dragging = null;
         return;
     }
@@ -196,36 +214,39 @@ let rotate = (evt) => { // triggas när musknappen släpps över en triangel
 
 let moveTriangle = (evt) => {
     evt.preventDefault();
-    if (mouseDown) {
-        dragging = mouseDown;
-        triangle = dragging.triangle;
-        let mousePosition = new Point(evt.clientX, evt.clientY);
-        let dx = mousePosition.x-lastMousePosition.x;
-        let dy = mousePosition.y-lastMousePosition.y;
-        lastMousePosition = mousePosition;
-        for (point of triangle.points) {
-            point.x += dx;
-            point.y += dy;
-        }
-        triangle.draw();
-        for (let i = 0; i < 9; i++) {
-            if (pointInTriangle(mousePosition, triangleObjects[i].points)) {
-                for (point of triangleObjects[i].points) {
-                    if (point.orientation == triangle.points[0].orientation) {
-                        triangleObjects[i].svgElement.style.stroke = "green";
-                        triangleObjects[i].svgElement.style.strokeWidth = 2;
-                    }
+    if (!mouseDown) return;
+    dragging = mouseDown;
+    triangle = dragging.triangle;
+    let mousePosition = new Point(evt.clientX, evt.clientY);
+    let dx = mousePosition.x-lastMousePosition.x;
+    let dy = mousePosition.y-lastMousePosition.y;
+    lastMousePosition = mousePosition;
+    for (point of triangle.points) {
+        point.x += dx;
+        point.y += dy;
+    }
+    triangle.draw();
+    targetTriangle = null;
+    for (let i = 0; i < 9; i++) {
+        if (pointInTriangle(mousePosition, triangleObjects[i].points)) {
+            for (point of triangleObjects[i].points) {
+                if (point.orientation == triangle.points[0].orientation) {
+                    triangleObjects[i].svgElement.style.stroke = "green";
+                    triangleObjects[i].svgElement.style.strokeWidth = 2;
+                    targetTriangle = triangleObjects[i];
                 }
             }
-            else {
-                triangleObjects[i].svgElement.style.stroke = "grey";
-                triangleObjects[i].svgElement.style.strokeWidth = 1;
-            }
+        }
+    }
+    if (!targetTriangle) {
+        for (let i = 0; i < 9; i++) {
+            triangleObjects[i].svgElement.style.stroke = "grey";
+            triangleObjects[i].svgElement.style.strokeWidth = 1;
         }
     }
 }
 
-let pointInTriangle = (point, points) => {
+let pointInTriangle = (point, points) => {  // standardalgoritm
     let svgBoundingRect = document.getElementById("interactionArea").getBoundingClientRect();
     let pt = new Point(point.x-svgBoundingRect.x, point.y-svgBoundingRect.y);
     let v1 = points[0];
