@@ -1,3 +1,4 @@
+// global variables
 let puzzleData;
 let rectangleWidth;
 let rectangleHeight;
@@ -6,6 +7,9 @@ let dragging;
 let mouseDown;
 let lastMousePosition;
 let targetTriangle;
+let puzzleId;
+let playerName;
+let apiUrl = "https://peaceful-sands-97012.herokuapp.com/puzzle/";
 
 let initPuzzle = (data) => {
     puzzleData = data;
@@ -15,10 +19,13 @@ let initPuzzle = (data) => {
     }
     window.dispatchEvent(new Event("resize"));
     addListenersBody(document.body);
+    addListenersButton(document.getElementById("submitSolution"));
 }
 
 window.onload = () => {
-    fetch("https://peaceful-sands-97012.herokuapp.com/puzzle/1")
+    puzzleId = document.head.querySelector("[name~=puzzleId][content]").content;
+    playerName = document.head.querySelector("[name~=playerName][content]").content;
+    fetch(apiUrl + puzzleId)
     .then(response=>response.json())
     .then(data=>{ initPuzzle(data); });
 }
@@ -162,6 +169,10 @@ let addListenersTriangle = (svgTriangle) => {
     svgTriangle.addEventListener("mouseup", rotateOrDrop);
 }
 
+let addListenersButton = (button) => {
+    button.addEventListener("click", handleSubmit);
+}
+
 let drag = (evt) => {   // triggas när musknappen trycks över en triangel
     evt.preventDefault();
     let triangles = document.getElementsByClassName("inputTriangle");
@@ -169,7 +180,9 @@ let drag = (evt) => {   // triggas när musknappen trycks över en triangel
         if (triangles[i] == evt.target && i < 9) return;
     }
     mouseDown = evt.target;
-    /* TODO: position the latest clicked triangle on top of the others...
+    /* 
+    TODO: Position the latest clicked triangle on top of the others. As of now, all triangular tiles are transparent, so z positioning is not visible.
+    Below is a sketch solution, not finished!
     let index;
     for (let i = 0; i < triangleObjects.length; i++) {
         if (triangleObjects[i] == mouseDown.triangle) {
@@ -204,12 +217,18 @@ let rotateOrDrop = (evt) => { // triggas när musknappen släpps över en triang
         }
         targetTriangle = null;
         dragging = null;
+        let submitSolution = document.getElementById("submitSolution");
+        if (solved()) submitSolution.style.display = "block";
+        else submitSolution.style.display = "none";
         return;
     }
     mouseDown = null;
     let triangle = evt.target.triangle;
     triangle.rotate();
     triangle.draw();
+    let submitSolution = document.getElementById("submitSolution");
+    if (solved()) submitSolution.style.display = "block";
+    else submitSolution.style.display = "none";
 }
 
 let moveTriangle = (evt) => {
@@ -229,6 +248,7 @@ let moveTriangle = (evt) => {
     targetTriangle = null;
     for (let i = 0; i < 9; i++) {
         if (pointInTriangle(mousePosition, triangleObjects[i].points)) {
+            // TODO: exit if triangle is already "occupied"
             for (point of triangleObjects[i].points) {
                 if (point.orientation == triangle.points[0].orientation) {
                     triangleObjects[i].svgElement.style.stroke = "green";
@@ -244,6 +264,39 @@ let moveTriangle = (evt) => {
             triangleObjects[i].svgElement.style.strokeWidth = 1;
         }
     }
+}
+
+let handleSubmit = (evt) => {
+    evt.preventDefault();
+    let solution = [];
+    for (let triangle of triangleObjects) {
+        let obj = {
+            points: triangle.points,
+            angles: triangle.angles,
+            terms: triangle.terms
+        }
+        solution.push(obj);
+    }
+    let data = {
+        solution: solution,
+        puzzleId: puzzleId,
+        playerName: playerName
+    };
+    data = JSON.stringify(data);
+    fetch(apiUrl + "solutions", {
+        method: "POST",
+        mode: 'cors',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+        },
+        body: data
+    })
+    .then(response=>response.json())
+    .then(res=>{
+        alert(res.responseFromServer);
+        console.log(res);
+    });
 }
 
 let pointInTriangle = (point, points) => {  // standardalgoritm
@@ -262,4 +315,26 @@ let pointInTriangle = (point, points) => {  // standardalgoritm
 
 let sign = (p1, p2, p3) => {
     return (p1.x-p3.x)*(p2.y-p3.y)-(p2.x-p3.x)*(p1.y-p3.y);
+}
+
+let solved = () => {
+    let inputTrianglesCopy = triangleObjects.slice(9, 18);
+    for (let i = 0; i < 9; i++) {
+        if (inputTrianglesCopy.length > 9-i) return false;
+        for (let j = 0; j < 9-i; j++) {
+            let found = false;
+            for (let k = 0; k < 3; k++) {
+                if (triangleObjects[i].points[k].equals(inputTrianglesCopy[j].points[0]) &&
+                triangleObjects[i].points[(k+1)%3].equals(inputTrianglesCopy[j].points[1]) &&
+                triangleObjects[i].points[(k+2)%3].equals(inputTrianglesCopy[j].points[2])) {
+                    inputTrianglesCopy.splice(j, 1);
+                    found = true;
+                    break;
+                }
+            }
+            if (found) break;
+            if (i == 8) return false;
+        }
+    }
+    return true;
 }

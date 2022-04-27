@@ -163,4 +163,8 @@ class Point {
         this.y = y;
     }
 
+    equals(pt) {
+        return this.x == pt.x && this.y == pt.y;
+    }
+
 }
