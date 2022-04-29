@@ -5,11 +5,13 @@ let rectangleHeight;
 let triangleObjects = [];
 let dragging;
 let mouseDown;
+let touchDown;
 let lastMousePosition;
 let targetTriangle;
 let puzzleId;
 let playerName;
 let apiUrl = "https://peaceful-sands-97012.herokuapp.com/puzzle/";
+//let apiUrl = "http://localhost:3000/puzzle/";
 
 let initPuzzle = (data) => {
     puzzleData = data;
@@ -69,7 +71,7 @@ window.onresize = () => {
         let triangle = new Triangle(points, angles, terms, svgElements);
         triangle.draw();
         inputTriangle.triangle = triangle;
-        addListenersTriangle(inputTriangle);
+        if (8 < i) addListenersTriangle(inputTriangle);
         triangle.xFactor = Math.round(Math.min(rectangleWidth, rectangleHeight)/6);
         triangle.yFactor = Math.round(Math.min(rectangleWidth, rectangleHeight)*Math.sqrt(3)/6);
         triangleObjects[i] = triangle;
@@ -158,7 +160,12 @@ let pointPatternDownwards = (factors, nbr1, nbr2) => {
 
 let addListenersBody = (body) => {
     body.addEventListener("mousemove", moveTriangle);
+    body.addEventListener("touchmove", moveTriangle);
     body.addEventListener("mouseup", () => {
+        mouseDown = null;
+        dragging = null;
+    });
+    body.addEventListener("touchend", () => {
         mouseDown = null;
         dragging = null;
     });
@@ -166,15 +173,33 @@ let addListenersBody = (body) => {
 
 let addListenersTriangle = (svgTriangle) => {
     svgTriangle.addEventListener("mousedown", drag);
+    svgTriangle.addEventListener("touchstart", drag);
     svgTriangle.addEventListener("mouseup", rotateOrDrop);
+    svgTriangle.addEventListener("touchend", rotateOrDrop);
 }
 
 let addListenersButton = (button) => {
     button.addEventListener("click", handleSubmit);
 }
 
+let getPointFromEvent = (evt) => {
+    let x = evt.clientX;    // mouse
+    let y = evt.clientY;    // mouse
+    if (!x || !y) {         // touch
+        x = evt.touches[0].clientX;
+        y = evt.touches[0].clientY;
+    }
+    return new Point(x, y);
+}
+
 let drag = (evt) => {   // triggas när musknappen trycks över en triangel
     evt.preventDefault();
+    if (window.ontouchstart !== undefined) {
+        touchDown = true;
+        setTimeout(function() {
+            touchDown = false
+        }, 100);    // touch click within 100 ms
+    }
     let triangles = document.getElementsByClassName("inputTriangle");
     for (let i = 0; i < triangles.length; i++) {
         if (triangles[i] == evt.target && i < 9) return;
@@ -196,11 +221,11 @@ let drag = (evt) => {   // triggas när musknappen trycks över en triangel
     triangleObjects[index].draw();
     triangleObjects[triangleObjects.length-1].draw();
     */
-    lastMousePosition = new Point(evt.clientX, evt.clientY);
+    lastMousePosition = getPointFromEvent(evt);
 }
 
 let rotateOrDrop = (evt) => { // triggas när musknappen släpps över en triangel
-    if (dragging || !mouseDown) {
+    if ((dragging || !mouseDown) && !touchDown) {
         mouseDown = null;
         if (dragging && targetTriangle) {
             let index;
@@ -210,7 +235,12 @@ let rotateOrDrop = (evt) => { // triggas när musknappen släpps över en triang
                     break;
                 }
             }
-            triangleObjects[index].points = JSON.parse(JSON.stringify(targetTriangle.points));  // deep copy!
+            let pointsDeepCopy = JSON.parse(JSON.stringify(targetTriangle.points));
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 3; j++) {
+                    if (pointsDeepCopy[i].orientation == triangleObjects[index].points[j].orientation) triangleObjects[index].points[j] = pointsDeepCopy[i];
+                }
+            }
             triangleObjects[index].draw();
             targetTriangle.svgElement.style.stroke = "grey";
             targetTriangle.svgElement.style.strokeWidth = 1;
@@ -222,7 +252,9 @@ let rotateOrDrop = (evt) => { // triggas när musknappen släpps över en triang
         else submitSolution.style.display = "none";
         return;
     }
+    dragging = null;
     mouseDown = null;
+    touchDown = false;
     let triangle = evt.target.triangle;
     triangle.rotate();
     triangle.draw();
@@ -232,11 +264,11 @@ let rotateOrDrop = (evt) => { // triggas när musknappen släpps över en triang
 }
 
 let moveTriangle = (evt) => {
-    evt.preventDefault();
+    if (!evt.touches) evt.preventDefault();
     if (!mouseDown) return;
     dragging = mouseDown;
     triangle = dragging.triangle;
-    let mousePosition = new Point(evt.clientX, evt.clientY);
+    let mousePosition = getPointFromEvent(evt)
     let dx = mousePosition.x-lastMousePosition.x;
     let dy = mousePosition.y-lastMousePosition.y;
     lastMousePosition = mousePosition;
@@ -294,8 +326,9 @@ let handleSubmit = (evt) => {
     })
     .then(response=>response.json())
     .then(res=>{
-        alert(res.responseFromServer);
         console.log(res);
+        alert(res.responseFromServer);
+        location.reload();
     });
 }
 
