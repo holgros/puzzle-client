@@ -14,6 +14,8 @@ let apiUrl = "https://peaceful-sands-97012.herokuapp.com/puzzle/";
 //let apiUrl = "http://localhost:3000/puzzle/";
 
 let initPuzzle = (data) => {
+    let fetching = document.getElementById("fetching");
+    fetching.style.display = "none";
     puzzleData = data;
     let titleElements = document.getElementsByClassName("title");
     for (let element of titleElements) {
@@ -27,6 +29,16 @@ let initPuzzle = (data) => {
 window.onload = () => {
     puzzleId = document.head.querySelector("[name~=puzzleId][content]").content;
     playerName = document.head.querySelector("[name~=playerName][content]").content;
+    let i = 0;
+    let fetching = document.getElementById("fetching");
+    setInterval(() => {
+        i++;
+        let html = "Fetching";
+        for (let j = 0; j <= i%3; j++) {
+            html += ".";
+        }
+        fetching.innerHTML = html;
+    }, 333);
     fetch(apiUrl + puzzleId)
     .then(response=>response.json())
     .then(data=>{ initPuzzle(data); });
