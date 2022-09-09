@@ -10,7 +10,7 @@ let lastMousePosition;
 let targetTriangle;
 let puzzleId;
 let playerName;
-let apiUrl = "https://peaceful-sands-97012.herokuapp.com/puzzle/";
+let apiUrl = "https://peaceful-sands-97012.herokuapp.com/puzzles/";
 //let apiUrl = "http://localhost:3000/puzzle/";
 
 let initPuzzle = (data) => {
