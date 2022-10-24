@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Puzzle</title>
+    <link rel="stylesheet" href="form.css">
+    <script src="form.js"></script>
+</head>
+<body>
+    <h1>Puzzle</h1>
+    <!--
+    <div class="search-container">
+        <input type="text" name="fruit" id="fruit" placeholder="Search fruit 🍎">
+        <div class="suggestions">
+            <ul></ul>
+        </div>
+    </div>
+    -->
+    <div class="search-container">
+        <form action="./puzzle.php" method="get">
+        <label for="student">Student name:</label><br>
+        <input type="text" id="student" name="student"><br>
+        <label for="teacher" class="teacher">Teacher name:</label><br>
+        <input type="text" id="teacher" class="teacher" name="teacher"><br>
+        <div class="suggestions">
+            <ul></ul>
+        </div>
+        <label for="puzzle" class="puzzle">Puzzle name:</label><br>
+        <input type="text" id="puzzle" class="puzzle" name="puzzle"><br><br>
+        <div class="suggestions2">
+            <ul></ul>
+        </div>
+        <input type="submit" id="submit" value="Start">
+    </form> 
+</div>
+
+</body>
+</html>
