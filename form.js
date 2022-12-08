@@ -1,4 +1,4 @@
-const url = "https://peaceful-sands-97012.herokuapp.com/puzzles";
+const url = "https://holgros-puzzle-api.herokuapp.com/puzzles";
 
 window.onload = () => {
   const input = document.querySelector("#teacher");

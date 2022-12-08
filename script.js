@@ -10,7 +10,7 @@ let lastMousePosition;
 let targetTriangle;
 let puzzleId;
 let playerName;
-let apiUrl = "https://peaceful-sands-97012.herokuapp.com/puzzles/";
+let apiUrl = "https://holgros-puzzle-api.herokuapp.com/puzzles/";
 //let apiUrl = "http://localhost:3000/puzzle/";
 
 let initPuzzle = (data) => {
@@ -324,7 +324,8 @@ let handleSubmit = (evt) => {
     let data = {
         solution: solution,
         puzzleId: puzzleId,
-        playerName: playerName
+        playerName: playerName,
+        date: new Date().toISOString()
     };
     data = JSON.stringify(data);
     fetch(apiUrl + "solutions", {
