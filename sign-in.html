@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Please enter your name</title>
+    <script>
+        window.onload = function() {
+            let input = document.getElementById("student");
+            let submit = document.getElementById("submit");
+            submit.style.display = "none";
+            input.addEventListener("keyup", function() {
+                if (input.value) submit.style.display = "inline";
+                else submit.style.display = "none";
+            });
+        };
+    </script>
+</head>
+<body>
+    <form method="get" action="puzzle.php">
+        <label for="student">Please enter your name:</label>
+        <input type="text" id="student" name="student">
+        <input type="hidden" id="teacher" name="teacher" value="***TEACHERNAME***">
+        <input type="hidden" id="puzzle" name="puzzle" value="***PUZZLEID***">
+        <input type="submit" id="submit" value="Start game!">
+    </form>
+</body>
+</html>

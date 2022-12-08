@@ -1,12 +1,17 @@
 <?php
     $html = file_get_contents("puzzle.html");
+    $signed_in = false;
     if (isset($_GET["student"])) {
         $html = str_replace("***PLAYERNAME***", $_GET["student"], $html);
+        $signed_in = true;
     }
     if (isset($_GET["teacher"]) && isset($_GET["puzzle"])) {
+        if (!$signed_in) {
+            header("location: sign-in.php?teacher=".$_GET["teacher"]."&puzzle=".$_GET["puzzle"]);
+            exit();
+        }
         //$url = "https://peaceful-sands-97012.herokuapp.com/puzzles?user=" . $_GET["teacher"] . "&title=" . $_GET["puzzle"];
-        $url = "https://peaceful-sands-97012.herokuapp.com/puzzles";
-        //echo $url;
+        $url = "https://holgros-puzzle-api.herokuapp.com/puzzles/";
         
         $curl = curl_init();
 
